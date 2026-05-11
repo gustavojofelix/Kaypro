@@ -1,14 +1,16 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { RequisitionService } from '../../../core/services/requisition.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { Requisition } from '../../../core/models';
+import { RequisitionDetailModalComponent } from '../requisition-detail-modal/requisition-detail-modal.component';
 
 @Component({
   selector: 'app-requisitions-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, RequisitionDetailModalComponent],
   template: `
     <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
       <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Minhas Requisições</h2>
@@ -28,6 +30,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
               <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
               <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -46,13 +49,15 @@ import { AuthService } from '../../../core/services/auth.service';
                       }">
                   {{req.status}}
                 </span>
-                <div *ngIf="req.status === 'Rejeitado'" class="text-xs text-red-500 mt-1">
-                  Motivo: {{req.rejectionReason}}
-                </div>
+              </td>
+              <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button (click)="viewDetails(req)" class="text-blue-600 hover:text-blue-900 font-semibold px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                  Ver Detalhes
+                </button>
               </td>
             </tr>
             <tr *ngIf="(myRequisitions$ | async)?.length === 0">
-              <td colspan="5" class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">Nenhuma requisição encontrada.</td>
+              <td colspan="6" class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">Nenhuma requisição encontrada.</td>
             </tr>
           </tbody>
         </table>
@@ -77,9 +82,11 @@ import { AuthService } from '../../../core/services/auth.service';
             <span class="text-gray-500">{{req.type}}</span>
             <span class="font-medium text-gray-900">{{req.totalValue | currency:'MZN':'symbol-narrow'}}</span>
           </div>
-          <div class="text-xs text-gray-400">{{req.date | date:'dd/MM/yyyy HH:mm'}}</div>
-          <div *ngIf="req.status === 'Rejeitado'" class="text-xs text-red-500">
-            Motivo: {{req.rejectionReason}}
+          <div class="flex justify-between items-center">
+            <div class="text-xs text-gray-400">{{req.date | date:'dd/MM/yyyy HH:mm'}}</div>
+            <button (click)="viewDetails(req)" class="text-blue-600 hover:text-blue-900 text-xs font-bold uppercase tracking-tighter px-2 py-1 border border-blue-200 rounded">
+              Detalhes
+            </button>
           </div>
         </div>
         <div *ngIf="(myRequisitions$ | async)?.length === 0" class="p-4 text-sm text-center text-gray-500">
@@ -87,6 +94,13 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
     </div>
+
+    <!-- Detail Modal -->
+    <app-requisition-detail-modal 
+      *ngIf="selectedRequisition()" 
+      [requisition]="selectedRequisition()!"
+      (close)="selectedRequisition.set(null)">
+    </app-requisition-detail-modal>
   `
 })
 export class RequisitionsListComponent {
@@ -96,4 +110,10 @@ export class RequisitionsListComponent {
   myRequisitions$ = this.reqService.requisitions$.pipe(
     map(reqs => reqs.filter(r => r.requesterId === this.authService.currentUserValue?.id))
   );
+
+  selectedRequisition = signal<Requisition | null>(null);
+
+  viewDetails(req: Requisition) {
+    this.selectedRequisition.set(req);
+  }
 }

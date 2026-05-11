@@ -1,13 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { map } from 'rxjs/operators';
 import { RequisitionService } from '../../../core/services/requisition.service';
-import { RequisitionStatus } from '../../../core/models';
+import { RequisitionStatus, Requisition } from '../../../core/models';
+import { RequisitionDetailModalComponent } from '../../requisitions/requisition-detail-modal/requisition-detail-modal.component';
 
 @Component({
   selector: 'app-pca-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RequisitionDetailModalComponent],
   template: `
     <div class="mb-4 sm:mb-6 flex justify-between items-center">
       <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Despacho PCA (Nível 2)</h2>
@@ -38,6 +39,9 @@ import { RequisitionStatus } from '../../../core/models';
               <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{req.type}}</td>
               <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold text-gray-900">{{req.totalValue | currency:'MZN':'symbol-narrow'}}</td>
               <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button (click)="viewDetails(req)" class="text-indigo-600 hover:text-indigo-900 mr-4 font-semibold">
+                  Ver Detalhes
+                </button>
                 <button (click)="approve(req.id)" class="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md mr-2 transition-colors shadow-sm">
                   Aprovação Final
                 </button>
@@ -63,7 +67,10 @@ import { RequisitionStatus } from '../../../core/models';
             </div>
             <span class="text-sm font-semibold text-gray-900">{{req.totalValue | currency:'MZN':'symbol-narrow'}}</span>
           </div>
-          <div class="text-xs text-gray-500">{{req.type}}</div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-gray-500 uppercase tracking-tighter">{{req.type}}</span>
+            <button (click)="viewDetails(req)" class="text-indigo-600 font-bold uppercase tracking-widest">Itens</button>
+          </div>
           <div class="flex gap-2">
             <button (click)="approve(req.id)" class="flex-1 text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md transition-colors shadow-sm text-sm font-medium">
               Aprovação Final
@@ -78,6 +85,13 @@ import { RequisitionStatus } from '../../../core/models';
         </div>
       </div>
     </div>
+
+    <!-- Detail Modal -->
+    <app-requisition-detail-modal 
+      *ngIf="selectedRequisition()" 
+      [requisition]="selectedRequisition()!"
+      (close)="selectedRequisition.set(null)">
+    </app-requisition-detail-modal>
   `
 })
 export class PcaDashboardComponent {
@@ -86,6 +100,12 @@ export class PcaDashboardComponent {
   pendingReqs$ = this.reqService.requisitions$.pipe(
     map(reqs => reqs.filter(r => r.status === RequisitionStatus.PENDENTE_PCA))
   );
+
+  selectedRequisition = signal<Requisition | null>(null);
+
+  viewDetails(req: Requisition) {
+    this.selectedRequisition.set(req);
+  }
 
   approve(id: string) {
     this.reqService.updateStatus(id, RequisitionStatus.APROVADO);

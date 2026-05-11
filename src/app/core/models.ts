@@ -6,6 +6,7 @@ export enum Role {
 
 export interface User {
   id: string;
+  email: string;
   name: string;
   role: Role;
 }
@@ -71,5 +72,13 @@ export interface Factura {
   numero: string;
   valor: number;
   estado: FacturaEstado;
+  dataCriacao: Date;
+}
+export interface Cliente {
+  id: string;
+  nome: string;
+  entidade: string;
+  nuit: string;
+  endereco: string;
   dataCriacao: Date;
 }
