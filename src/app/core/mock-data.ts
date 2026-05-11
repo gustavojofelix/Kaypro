@@ -1,9 +1,4 @@
-import { Vehicle, Requisition, RequisitionType, RequisitionStatus } from './models';
-
-export const MOCK_VEHICLES: Vehicle[] = [
-  { id: 'v1', plate: 'AGQ-123-MC', model: 'Toyota Hilux', lastKm: 12500 },
-  { id: 'v2', plate: 'AIZ-456-MC', model: 'Ford Ranger', lastKm: 8300 }
-];
+import { Requisition, RequisitionType, RequisitionStatus } from './models';
 
 export const MOCK_REQUISITIONS: Requisition[] = [
   {
@@ -26,7 +21,7 @@ export const MOCK_REQUISITIONS: Requisition[] = [
     requesterId: 'u1',
     requesterName: 'João Solicitante',
     date: new Date('2026-05-02T14:30:00'),
-    status: RequisitionStatus.PENDENTE_PCA, // passou na admin porque o limite pode ser > 5000 MT? 
+    status: RequisitionStatus.PENDENTE_PCA,
     vehicleId: 'v1',
     currentKm: 12600,
     liters: 50,

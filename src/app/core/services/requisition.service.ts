@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Requisition, RequisitionStatus, RequisitionType, Vehicle } from '../models';
-import { MOCK_REQUISITIONS, MOCK_VEHICLES } from '../mock-data';
+import { Requisition, RequisitionStatus, RequisitionType } from '../models';
+import { MOCK_REQUISITIONS } from '../mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -10,9 +10,6 @@ import { MOCK_REQUISITIONS, MOCK_VEHICLES } from '../mock-data';
 export class RequisitionService {
   private requisitionsSubject = new BehaviorSubject<Requisition[]>([...MOCK_REQUISITIONS]);
   public requisitions$ = this.requisitionsSubject.asObservable();
-
-  private vehiclesSubject = new BehaviorSubject<Vehicle[]>([...MOCK_VEHICLES]);
-  public vehicles$ = this.vehiclesSubject.asObservable();
 
   constructor() {}
 
@@ -24,10 +21,6 @@ export class RequisitionService {
     const current = this.getRequisitions();
     req.id = 'REQ-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     this.requisitionsSubject.next([req, ...current]);
-    
-    if (req.vehicleId && req.currentKm) {
-        this.updateVehicleKm(req.vehicleId, req.currentKm);
-    }
   }
 
   updateStatus(id: string, newStatus: RequisitionStatus, reason?: string): void {
@@ -39,21 +32,6 @@ export class RequisitionService {
       return req;
     });
     this.requisitionsSubject.next(updated);
-  }
-
-  getVehicle(id: string): Vehicle | undefined {
-    return this.vehiclesSubject.value.find(v => v.id === id);
-  }
-  
-  updateVehicleKm(id: string, newKm: number): void {
-      const current = this.vehiclesSubject.value;
-      const updated = current.map(v => {
-          if (v.id === id) {
-              return { ...v, lastKm: newKm };
-          }
-          return v;
-      });
-      this.vehiclesSubject.next(updated);
   }
 
   // --- Analytics Methods ---
@@ -103,16 +81,15 @@ export class RequisitionService {
     );
   }
 
+  // Método simplificado para evitar erro de compilação até que o analytics seja migrado para Supabase
   getFuelConsumptionByVehicle(): Observable<{plate: string, liters: number}[]> {
     return this.requisitions$.pipe(
       map(reqs => {
         const consumption: Record<string, number> = {};
         reqs.filter(r => r.type === RequisitionType.COMBUSTIVEL && r.vehicleId)
             .forEach(r => {
-              const vehicle = this.getVehicle(r.vehicleId!);
-              if (vehicle) {
-                consumption[vehicle.plate] = (consumption[vehicle.plate] || 0) + (r.liters || 0);
-              }
+              const plate = 'Viatura ' + r.vehicleId; // Fallback temporário
+              consumption[plate] = (consumption[plate] || 0) + (r.liters || 0);
             });
         
         return Object.keys(consumption).map(key => ({

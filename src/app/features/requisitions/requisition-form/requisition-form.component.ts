@@ -4,7 +4,8 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Va
 import { Router, RouterModule } from '@angular/router';
 import { RequisitionService } from '../../../core/services/requisition.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { RequisitionType, RequisitionStatus, Requisition, Vehicle } from '../../../core/models';
+import { ViaturaService } from '../../../core/services/viatura.service';
+import { RequisitionType, RequisitionStatus, Requisition, Viatura } from '../../../core/models';
 
 @Component({
   selector: 'app-requisition-form',
@@ -32,20 +33,31 @@ import { RequisitionType, RequisitionStatus, Requisition, Vehicle } from '../../
         <div *ngIf="form.get('type')?.value === 'COMBUSTIVEL'" class="bg-gray-50 p-3 sm:p-4 rounded-md mb-6 border border-gray-200">
           <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-4">Detalhes do Abastecimento</h3>
           <div class="grid grid-cols-1 gap-y-4 sm:gap-y-6 gap-x-4 sm:grid-cols-6">
-            <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-700">Viatura</label>
-              <select formControlName="vehicleId" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                <option value="">Selecione...</option>
-                <option *ngFor="let v of vehicles" [value]="v.id">{{v.plate}} ({{v.model}})</option>
-              </select>
+            <div class="sm:col-span-3">
+              <label class="block text-sm font-medium text-gray-700">Viatura <span class="text-red-500">*</span></label>
+              
+              <div *ngIf="viaturas.length > 0; else noViaturas" class="mt-1">
+                <select formControlName="vehicleId" class="block w-full pl-3 pr-10 py-2 border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                  <option value="">Selecione uma viatura...</option>
+                  <option *ngFor="let v of viaturas" [value]="v.id">{{v.marca}} - {{v.matricula}}</option>
+                </select>
+              </div>
+              
+              <ng-template #noViaturas>
+                <div class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-md">
+                  <p class="text-sm text-amber-800 mb-2">Você ainda não tem viaturas cadastradas.</p>
+                  <a routerLink="/viaturas" class="inline-flex items-center text-xs font-bold text-amber-900 uppercase hover:underline">
+                    Cadastrar viatura agora →
+                  </a>
+                </div>
+              </ng-template>
             </div>
-            <div class="sm:col-span-2">
+
+            <div class="sm:col-span-1.5" [class.opacity-50]="!form.get('vehicleId')?.value">
               <label class="block text-sm font-medium text-gray-700">KM Atual</label>
               <input type="number" formControlName="currentKm" class="mt-1 border border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm rounded-md">
-              <p *ngIf="kmError" class="mt-2 text-sm text-red-600 font-medium">{{kmError}}</p>
-              <p *ngIf="selectedVehicle" class="mt-1 text-xs text-gray-500">Último registo: {{selectedVehicle.lastKm}} km</p>
             </div>
-            <div class="sm:col-span-2">
+            <div class="sm:col-span-1.5" [class.opacity-50]="!form.get('vehicleId')?.value">
               <label class="block text-sm font-medium text-gray-700">Litros</label>
               <input type="number" formControlName="liters" class="mt-1 border border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm rounded-md">
             </div>
@@ -124,11 +136,12 @@ export class RequisitionFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private reqService = inject(RequisitionService);
   private authService = inject(AuthService);
+  private viaturaService = inject(ViaturaService);
   private router = inject(Router);
 
   form: FormGroup;
-  vehicles: Vehicle[] = [];
-  selectedVehicle?: Vehicle;
+  viaturas: Viatura[] = [];
+  selectedViatura?: Viatura;
   kmError: string | null = null;
 
   constructor() {
@@ -148,8 +161,12 @@ export class RequisitionFormComponent implements OnInit {
     this.addItem();
   }
 
-  ngOnInit() {
-    this.reqService.vehicles$.subscribe(v => this.vehicles = v);
+  async ngOnInit() {
+    try {
+      this.viaturas = await this.viaturaService.getViaturasAtivas();
+    } catch (e) {
+      console.error('Erro ao carregar viaturas:', e);
+    }
     
     this.form.get('type')?.valueChanges.subscribe(type => {
       if (type === 'MATERIAL') {
@@ -180,12 +197,7 @@ export class RequisitionFormComponent implements OnInit {
     this.form.get('type')?.setValue('MATERIAL', { emitEvent: true });
 
     this.form.get('vehicleId')?.valueChanges.subscribe(id => {
-      this.selectedVehicle = this.vehicles.find(v => v.id === id);
-      this.validateKm();
-    });
-
-    this.form.get('currentKm')?.valueChanges.subscribe(() => {
-      this.validateKm();
+      this.selectedViatura = this.viaturas.find(v => v.id === id);
     });
   }
 
@@ -220,18 +232,6 @@ export class RequisitionFormComponent implements OnInit {
     return total;
   }
 
-  validateKm() {
-    if (this.selectedVehicle) {
-      const current = this.form.get('currentKm')?.value;
-      if (current && current < this.selectedVehicle.lastKm) {
-        this.kmError = `Odômetro inválido. KM Atual não pode ser menor que o último registo (${this.selectedVehicle.lastKm} km).`;
-      } else {
-        this.kmError = null;
-      }
-    } else {
-      this.kmError = null;
-    }
-  }
 
   onSubmit() {
     if (this.form.invalid || this.kmError) return;

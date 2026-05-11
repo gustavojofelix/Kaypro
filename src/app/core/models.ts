@@ -11,11 +11,14 @@ export interface User {
   role: Role;
 }
 
-export interface Vehicle {
+export interface Viatura {
   id: string;
-  plate: string;
-  model: string;
-  lastKm: number;
+  marca: string;
+  matricula: string;
+  user_id: string;
+  ativa: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export enum RequisitionStatus {
@@ -74,6 +77,7 @@ export interface Factura {
   estado: FacturaEstado;
   dataCriacao: Date;
 }
+
 export interface Cliente {
   id: string;
   nome: string;

@@ -26,6 +26,12 @@ export const routes: Routes = [
         data: { roles: [Role.SOLICITANTE_OBRAS] }
       },
       {
+        path: 'viaturas',
+        loadComponent: () => import('./features/viaturas/viaturas-list.component').then(m => m.ViaturaListComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.SOLICITANTE_OBRAS] }
+      },
+      {
         path: 'approvals/admin',
         loadComponent: () => import('./features/approvals/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
         canActivate: [roleGuard],
