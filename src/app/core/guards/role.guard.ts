@@ -3,17 +3,20 @@ import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { Role } from '../models';
 
-export const roleGuard: CanActivateFn = (route, state) => {
+export const roleGuard: CanActivateFn = async (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  
+
+  // Wait for the auth service to finish checking the session
+  await authService.waitForInit();
+
   const expectedRoles = route.data['roles'] as Role[];
   const currentUser = authService.currentUserValue;
 
   if (currentUser && expectedRoles.includes(currentUser.role)) {
     return true;
   }
-  
+
   if (!currentUser) {
     return router.parseUrl('/login');
   }

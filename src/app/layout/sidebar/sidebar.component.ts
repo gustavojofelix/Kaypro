@@ -17,7 +17,7 @@ import { Role } from '../../core/models';
       [class.translate-x-0]="isOpen">
 
       <div class="flex items-center justify-between h-14 sm:h-16 border-b border-gray-800 px-4">
-        <span class="text-xl font-bold uppercase tracking-wider text-blue-400">ProCon</span>
+        <span class="text-xl font-bold uppercase tracking-wider text-blue-400">KayPro</span>
         <!-- Close button (mobile only) -->
         <button
           (click)="closeSidebar.emit()"
@@ -63,6 +63,12 @@ import { Role } from '../../core/models';
             Facturação
           </a>
         </ng-container>
+        <ng-container *ngIf="isAdmin || isPca">
+          <a routerLink="/clientes" routerLinkActive="bg-gray-800 text-white" class="flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-800 hover:text-white transition-colors mt-1">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            Clientes
+          </a>
+        </ng-container>
       </nav>
 
       <div class="p-4 border-t border-gray-800">
@@ -93,8 +99,8 @@ export class SidebarComponent {
     return this.authService.hasRole(Role.PCA);
   }
 
-  logout() {
-    this.authService.logout();
+  async logout() {
+    await this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

@@ -1,10 +1,4 @@
-import { User, Role, Vehicle, Requisition, RequisitionType, RequisitionStatus } from './models';
-
-export const MOCK_USERS: User[] = [
-  { id: 'u1', name: 'João Solicitante', role: Role.SOLICITANTE_OBRAS },
-  { id: 'u2', name: 'Maria Admin', role: Role.ADMINISTRACAO },
-  { id: 'u3', name: 'Carlos PCA', role: Role.PCA }
-];
+import { Vehicle, Requisition, RequisitionType, RequisitionStatus } from './models';
 
 export const MOCK_VEHICLES: Vehicle[] = [
   { id: 'v1', plate: 'AGQ-123-MC', model: 'Toyota Hilux', lastKm: 12500 },

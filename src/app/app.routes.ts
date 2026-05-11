@@ -48,6 +48,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/facturacao/facturacao.component').then(m => m.FacturacaoComponent),
         canActivate: [roleGuard],
         data: { roles: [Role.PCA] }
+      },
+      {
+        path: 'clientes',
+        loadComponent: () => import('./features/clientes/clientes-list.component').then(m => m.ClientesListComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMINISTRACAO, Role.PCA] }
       }
     ]
   },

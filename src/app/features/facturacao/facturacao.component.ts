@@ -1,7 +1,8 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Factura, FacturaEstado } from '../../core/models';
+import { FacturaService } from '../../core/services/factura.service';
 
 @Component({
   selector: 'app-facturacao',
@@ -45,8 +46,16 @@ import { Factura, FacturaEstado } from '../../core/models';
       </button>
     </div>
 
+    <!-- Loading -->
+    <div *ngIf="isLoading()" class="flex justify-center py-12">
+      <svg class="animate-spin h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+
     <!-- Table -->
-    <div class="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
+    <div *ngIf="!isLoading()" class="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -161,6 +170,14 @@ import { Factura, FacturaEstado } from '../../core/models';
               <div class="text-lg font-bold text-rose-700">{{ totalDividas() | currency:'MZN':'symbol-narrow' }}</div>
             </div>
           </div>
+
+          <!-- Save Error -->
+          <div *ngIf="saveError()" class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-sm text-red-600">{{ saveError() }}</span>
+          </div>
         </div>
 
         <!-- Modal Footer -->
@@ -170,20 +187,30 @@ import { Factura, FacturaEstado } from '../../core/models';
             Cancelar
           </button>
           <button (click)="salvarFactura()"
-                  class="px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
-            Salvar
+                  [disabled]="isSaving()"
+                  class="px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center">
+            <svg *ngIf="isSaving()" class="animate-spin -ml-0.5 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isSaving() ? 'A salvar...' : 'Salvar' }}
           </button>
         </div>
       </div>
     </div>
   `
 })
-export class FacturacaoComponent {
+export class FacturacaoComponent implements OnInit {
+  private facturaService = inject(FacturaService);
+
   estados = FacturaEstado;
 
   facturas = signal<Factura[]>([]);
   showModal = signal(false);
   submitted = signal(false);
+  isLoading = signal(true);
+  isSaving = signal(false);
+  saveError = signal('');
 
   formNumero = '';
   formValor: number | null = null;
@@ -207,8 +234,18 @@ export class FacturacaoComponent {
       .reduce((sum, f) => sum + f.valor, 0)
   );
 
+  async ngOnInit(): Promise<void> {
+    this.isLoading.set(true);
+    await this.facturaService.loadFacturas();
+    this.facturaService.facturas$.subscribe(facturas => {
+      this.facturas.set(facturas);
+    });
+    this.isLoading.set(false);
+  }
+
   openModal(): void {
     this.submitted.set(false);
+    this.saveError.set('');
     this.formNumero = '';
     this.formValor = null;
     this.formEstado = FacturaEstado.PENDENTE;
@@ -218,24 +255,32 @@ export class FacturacaoComponent {
   closeModal(): void {
     this.showModal.set(false);
     this.submitted.set(false);
+    this.saveError.set('');
   }
 
-  salvarFactura(): void {
+  async salvarFactura(): Promise<void> {
     this.submitted.set(true);
+    this.saveError.set('');
 
     if (!this.formNumero || !this.formValor || this.formValor <= 0) {
       return;
     }
 
-    const novaFactura: Factura = {
-      id: crypto.randomUUID(),
+    this.isSaving.set(true);
+
+    const { error } = await this.facturaService.addFactura({
       numero: this.formNumero,
       valor: this.formValor,
-      estado: this.formEstado,
-      dataCriacao: new Date()
-    };
+      estado: this.formEstado
+    });
 
-    this.facturas.update(list => [...list, novaFactura]);
+    this.isSaving.set(false);
+
+    if (error) {
+      this.saveError.set('Erro ao salvar a factura. Tente novamente.');
+      return;
+    }
+
     this.closeModal();
   }
 }
