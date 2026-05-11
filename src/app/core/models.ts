@@ -59,3 +59,17 @@ export interface Requisition {
   rejectionReason?: string;
   totalValue: number;
 }
+
+export enum FacturaEstado {
+  PENDENTE = 'Pendente',
+  PAGA = 'Paga',
+  CANCELADA = 'Cancelada'
+}
+
+export interface Factura {
+  id: string;
+  numero: string;
+  valor: number;
+  estado: FacturaEstado;
+  dataCriacao: Date;
+}

@@ -42,6 +42,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/approvals/pca-dashboard/pca-dashboard.component').then(m => m.PcaDashboardComponent),
         canActivate: [roleGuard],
         data: { roles: [Role.PCA] }
+      },
+      {
+        path: 'facturacao',
+        loadComponent: () => import('./features/facturacao/facturacao.component').then(m => m.FacturacaoComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.PCA] }
       }
     ]
   },
