@@ -11,8 +11,8 @@ import { Viatura } from '../../core/models';
   template: `
     <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
       <div>
-        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Minhas Viaturas</h2>
-        <p class="text-gray-500 mt-1">Gerencie suas viaturas para requisições de combustível</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Gestão de Frota</h2>
+        <p class="text-gray-500 mt-1">Gerencie as viaturas da organização para requisições de combustível</p>
       </div>
       <button
         (click)="openModal()"
@@ -37,7 +37,7 @@ import { Viatura } from '../../core/models';
         </svg>
       </div>
       <h3 class="text-lg font-bold text-gray-900 mb-1">Nenhuma viatura cadastrada</h3>
-      <p class="text-gray-500 mb-6">Cadastre sua primeira viatura para começar a fazer requisições.</p>
+      <p class="text-gray-500 mb-6">Cadastre a primeira viatura para que todos possam realizar requisições.</p>
       <button
         (click)="openModal()"
         class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">

@@ -45,10 +45,10 @@ import { RequisitionType, RequisitionStatus, Requisition, Viatura } from '../../
               
               <ng-template #noViaturas>
                 <div class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-md">
-                  <p class="text-sm text-amber-800 mb-2">Você ainda não tem viaturas cadastradas.</p>
-                  <a routerLink="/viaturas" class="inline-flex items-center text-xs font-bold text-amber-900 uppercase hover:underline">
-                    Cadastrar viatura agora →
-                  </a>
+                   <p class="text-sm text-amber-800 mb-2">Não existem viaturas ativas cadastradas no sistema.</p>
+                   <a routerLink="/viaturas" class="inline-flex items-center text-xs font-bold text-amber-900 uppercase hover:underline">
+                     Cadastrar viatura agora →
+                   </a>
                 </div>
               </ng-template>
             </div>
@@ -254,7 +254,7 @@ export class RequisitionFormComponent implements OnInit {
       requesterId: user.id,
       requesterName: user.name,
       date: new Date(),
-      status: RequisitionStatus.PENDENTE_ADMIN,
+      status: user.role === 'ADMINISTRACAO' ? RequisitionStatus.PENDENTE_PCA : RequisitionStatus.PENDENTE_ADMIN,
       totalValue: totalValue,
       
       destinationWork: this.form.get('destinationWork')?.value,

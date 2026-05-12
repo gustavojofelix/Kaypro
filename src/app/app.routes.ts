@@ -23,13 +23,13 @@ export const routes: Routes = [
         path: 'requisitions/new',
         loadComponent: () => import('./features/requisitions/requisition-form/requisition-form.component').then(m => m.RequisitionFormComponent),
         canActivate: [roleGuard],
-        data: { roles: [Role.SOLICITANTE_OBRAS] }
+        data: { roles: [Role.SOLICITANTE_OBRAS, Role.ADMINISTRACAO] }
       },
       {
         path: 'viaturas',
         loadComponent: () => import('./features/viaturas/viaturas-list.component').then(m => m.ViaturaListComponent),
         canActivate: [roleGuard],
-        data: { roles: [Role.SOLICITANTE_OBRAS] }
+        data: { roles: [Role.SOLICITANTE_OBRAS, Role.ADMINISTRACAO] }
       },
       {
         path: 'approvals/admin',

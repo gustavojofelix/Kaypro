@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { RequisitionService } from '../../../core/services/requisition.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Requisition } from '../../../core/models';
+import { Requisition, Role } from '../../../core/models';
 import { RequisitionDetailModalComponent } from '../requisition-detail-modal/requisition-detail-modal.component';
 
 @Component({
@@ -13,7 +13,9 @@ import { RequisitionDetailModalComponent } from '../requisition-detail-modal/req
   imports: [CommonModule, RouterModule, RequisitionDetailModalComponent],
   template: `
     <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-      <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Minhas Requisições</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-800">
+        {{ isAdmin ? 'Gestão de Minhas Requisições' : 'Minhas Requisições' }}
+      </h2>
       <a routerLink="/requisitions/new" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm text-sm font-medium transition-colors text-center sm:w-auto w-full">
         Nova Requisição
       </a>
@@ -107,6 +109,10 @@ export class RequisitionsListComponent {
   private reqService = inject(RequisitionService);
   private authService = inject(AuthService);
   
+  get isAdmin(): boolean {
+    return this.authService.hasRole(Role.ADMINISTRACAO);
+  }
+
   myRequisitions$ = this.reqService.requisitions$.pipe(
     map(reqs => reqs.filter(r => r.requesterId === this.authService.currentUserValue?.id))
   );
