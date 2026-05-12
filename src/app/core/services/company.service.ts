@@ -1,4 +1,6 @@
 import { Injectable, inject } from '@angular/core';
+import { createClient } from '@supabase/supabase-js';
+import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
 import { Company, User, Role } from '../models';
 
@@ -9,12 +11,13 @@ export class CompanyService {
   private supabase = inject(SupabaseService);
 
   async getCompanies(): Promise<Company[]> {
-    // Return initial companies as requested
-    // In a real app, this would fetch from a 'companies' table
-    return [
-      { id: '1', name: 'Kayconect' },
-      { id: '2', name: 'Procon' }
-    ];
+    const { data, error } = await this.supabase.client
+      .from('companies')
+      .select('*')
+      .order('name', { ascending: true });
+    
+    if (error) throw error;
+    return data as Company[];
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -24,12 +27,9 @@ export class CompanyService {
     
     if (error) throw error;
 
-    // Fetch auth emails if possible, or just use placeholder
-    // In Supabase, getting emails for all users usually requires service role key
-    // For now, we'll return what we have in profiles
     return data.map(p => ({
       id: p.id,
-      email: '', // Not stored in profiles by default
+      email: '', // Email typically in auth.users, requires service role to fetch for all
       name: p.name,
       role: p.role as Role,
       companyId: p.company_id
@@ -37,36 +37,66 @@ export class CompanyService {
   }
 
   async addUser(userData: { name: string, email: string, role: Role, companyId: string }): Promise<void> {
-    // Note: To create a user with email/password in Supabase from frontend,
-    // we normally use auth.signUp. But if PCA is creating for others,
-    // they might not want to log out.
-    // Standard approach: use a supabase edge function or service role.
-    // For this demo/task, we'll assume we can use signUp or just create the profile
-    // if the user already exists in auth.
-    
-    // Simplification for the task: we'll simulate the creation.
-    // In a real scenario, this would involve a call to a management API.
-    
-    const { data: authData, error: authError } = await this.supabase.client.auth.admin.createUser({
+    // Para criar um utilizador sem deslogar o PCA, criamos um cliente temporário 
+    // com persistSession: false.
+    const tempSupabase = createClient(environment.supabaseUrl, environment.supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+
+    const { data: authData, error: authError } = await tempSupabase.auth.signUp({
       email: userData.email,
-      password: 'TemporaryPassword123!', // Should be changed by user
-      email_confirm: true,
-      user_metadata: { name: userData.name }
+      password: 'SenhaTemporaria123!', // Senha padrão inicial
+      options: {
+        data: {
+          name: userData.name,
+          role: userData.role,
+          company_id: userData.companyId
+        }
+      }
     });
 
     if (authError) throw authError;
 
     if (authData.user) {
+      // Inserimos o perfil na tabela 'profiles'
       const { error: profileError } = await this.supabase.client
         .from('profiles')
         .insert({
           id: authData.user.id,
           name: userData.name,
+          email: userData.email, // Adicionado para resolver a restrição NOT NULL
           role: userData.role,
           company_id: userData.companyId
         });
       
-      if (profileError) throw profileError;
+      // Ignoramos erro de duplicado (caso exista um trigger no banco que já criou o perfil)
+      if (profileError && profileError.code !== '23505') throw profileError;
     }
+  }
+
+  async updateUser(userId: string, updates: { name: string, role: Role, companyId: string }): Promise<void> {
+    const { error } = await this.supabase.client
+      .from('profiles')
+      .update({
+        name: updates.name,
+        role: updates.role,
+        company_id: updates.companyId
+      })
+      .eq('id', userId);
+    
+    if (error) throw error;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const { error } = await this.supabase.client
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+    
+    if (error) throw error;
   }
 }
