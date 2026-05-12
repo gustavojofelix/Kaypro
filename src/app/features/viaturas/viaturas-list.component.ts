@@ -69,12 +69,19 @@ import { Viatura } from '../../core/models';
                   {{ v.ativa ? 'Ativa' : 'Inativa' }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                <button (click)="editViatura(v)" class="text-blue-600 hover:text-blue-900 transition-colors">Editar</button>
-                <button (click)="toggleStatus(v)" class="text-amber-600 hover:text-amber-900 transition-colors">
-                  {{ v.ativa ? 'Desativar' : 'Ativar' }}
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                <button (click)="editViatura(v)" class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-md transition-colors" title="Editar">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 </button>
-                <button (click)="deleteViatura(v)" class="text-red-600 hover:text-red-900 transition-colors">Excluir</button>
+                <button (click)="toggleStatus(v)" 
+                        [class]="v.ativa ? 'text-amber-600 hover:text-amber-900 bg-amber-50' : 'text-green-600 hover:text-green-900 bg-green-50'"
+                        class="p-1.5 rounded-md transition-colors" 
+                        [title]="v.ativa ? 'Desativar' : 'Ativar'">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                </button>
+                <button (click)="deleteViatura(v)" class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-md transition-colors" title="Eliminar">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
               </td>
             </tr>
           </tbody>
