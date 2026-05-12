@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -124,8 +124,8 @@ import { RequisitionType, RequisitionStatus, Requisition, Viatura } from '../../
           <button type="button" routerLink="/requisitions" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto text-center">
             Cancelar
           </button>
-          <button type="submit" [disabled]="form.invalid || kmError" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 w-full sm:w-auto">
-            Submeter Requisição
+          <button type="submit" [disabled]="form.invalid || kmError || submitting()" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 w-full sm:w-auto">
+            {{ submitting() ? 'A submeter...' : 'Submeter Requisição' }}
           </button>
         </div>
       </form>
@@ -233,11 +233,15 @@ export class RequisitionFormComponent implements OnInit {
   }
 
 
-  onSubmit() {
+  submitting = signal(false);
+
+  async onSubmit() {
     if (this.form.invalid || this.kmError) return;
 
     const user = this.authService.currentUserValue;
     if (!user) return;
+
+    this.submitting.set(true);
 
     const type = this.form.get('type')?.value;
     let totalValue = 0;
@@ -248,24 +252,27 @@ export class RequisitionFormComponent implements OnInit {
       totalValue = (this.form.get('liters')?.value || 0) * 85; 
     }
 
-    const newReq: Requisition = {
-      id: '',
-      type: type,
-      requesterId: user.id,
-      requesterName: user.name,
-      date: new Date(),
-      status: user.role === 'ADMINISTRACAO' ? RequisitionStatus.PENDENTE_PCA : RequisitionStatus.PENDENTE_ADMIN,
-      totalValue: totalValue,
-      
-      destinationWork: this.form.get('destinationWork')?.value,
-      items: type === 'MATERIAL' ? this.items.value : undefined,
-      
-      vehicleId: this.form.get('vehicleId')?.value,
-      currentKm: this.form.get('currentKm')?.value,
-      liters: this.form.get('liters')?.value
-    };
-
-    this.reqService.addRequisition(newReq);
-    this.router.navigate(['/requisitions']);
+    try {
+      await this.reqService.addRequisition({
+        type: type,
+        requesterId: user.id,
+        date: new Date(),
+        status: user.role === 'ADMINISTRACAO' ? RequisitionStatus.PENDENTE_PCA : RequisitionStatus.PENDENTE_ADMIN,
+        totalValue: totalValue,
+        destinationWork: this.form.get('destinationWork')?.value,
+        items: type === 'MATERIAL' ? this.items.value.map((it: any) => ({
+          ...it,
+          total: it.quantity * it.unitCost
+        })) : undefined,
+        vehicleId: this.form.get('vehicleId')?.value || undefined,
+        currentKm: this.form.get('currentKm')?.value || undefined,
+        liters: this.form.get('liters')?.value || undefined
+      });
+      this.router.navigate(['/requisitions']);
+    } catch (e: any) {
+      alert('Erro ao submeter requisição: ' + e.message);
+    } finally {
+      this.submitting.set(false);
+    }
   }
 }

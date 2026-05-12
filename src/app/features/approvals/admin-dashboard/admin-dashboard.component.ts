@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { map } from 'rxjs/operators';
 import { RequisitionService } from '../../../core/services/requisition.service';
@@ -89,9 +89,13 @@ import { RequisitionDetailModalComponent } from '../../requisitions/requisition-
     </app-requisition-detail-modal>
   `
 })
-export class AdminDashboardComponent {
+export class AdminDashboardComponent implements OnInit {
   private reqService = inject(RequisitionService);
   
+  async ngOnInit() {
+    await this.reqService.loadRequisitions();
+  }
+
   pendingReqs$ = this.reqService.requisitions$.pipe(
     map(reqs => reqs.filter(r => r.status === RequisitionStatus.PENDENTE_ADMIN))
   );
@@ -102,14 +106,16 @@ export class AdminDashboardComponent {
     this.selectedRequisition.set(req);
   }
 
-  approve(id: string, total: number) {
-    this.reqService.updateStatus(id, RequisitionStatus.PENDENTE_PCA);
+  async approve(id: string, total: number) {
+    if (confirm('Aprovar esta requisição e encaminhar para despacho do PCA?')) {
+      await this.reqService.updateStatus(id, RequisitionStatus.PENDENTE_PCA);
+    }
   }
 
-  reject(id: string) {
+  async reject(id: string) {
     const reason = prompt('Informe o motivo da rejeição:');
     if (reason) {
-      this.reqService.updateStatus(id, RequisitionStatus.REJEITADO, reason);
+      await this.reqService.updateStatus(id, RequisitionStatus.REJEITADO, reason);
     }
   }
 }

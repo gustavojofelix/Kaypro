@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { map } from 'rxjs/operators';
@@ -105,9 +105,13 @@ import { RequisitionDetailModalComponent } from '../requisition-detail-modal/req
     </app-requisition-detail-modal>
   `
 })
-export class RequisitionsListComponent {
+export class RequisitionsListComponent implements OnInit {
   private reqService = inject(RequisitionService);
   private authService = inject(AuthService);
+
+  async ngOnInit() {
+    await this.reqService.loadRequisitions();
+  }
   
   get isAdmin(): boolean {
     return this.authService.hasRole(Role.ADMINISTRACAO);
