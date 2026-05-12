@@ -4,11 +4,19 @@ export enum Role {
   PCA = 'PCA'
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  created_at?: Date;
+}
+
 export interface User {
   id: string;
   email: string;
   name: string;
   role: Role;
+  companyId?: string;
+  companyName?: string;
 }
 
 export interface Viatura {

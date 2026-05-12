@@ -60,6 +60,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/clientes/clientes-list.component').then(m => m.ClientesListComponent),
         canActivate: [roleGuard],
         data: { roles: [Role.ADMINISTRACAO, Role.PCA] }
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.PCA] }
       }
     ]
   },

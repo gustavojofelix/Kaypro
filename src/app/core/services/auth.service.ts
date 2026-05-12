@@ -37,7 +37,7 @@ export class AuthService {
   private async loadProfile(userId: string, email: string): Promise<void> {
     const { data, error } = await this.supabaseService.client
       .from('profiles')
-      .select('name, role')
+      .select('name, role, company_id')
       .eq('id', userId)
       .single();
 
@@ -46,7 +46,8 @@ export class AuthService {
         id: userId,
         email: email,
         name: data.name,
-        role: data.role as Role
+        role: data.role as Role,
+        companyId: data.company_id
       };
       this.currentUserSubject.next(user);
     }
