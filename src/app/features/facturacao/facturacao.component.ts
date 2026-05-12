@@ -1,8 +1,9 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Factura, FacturaEstado } from '../../core/models';
+import { Factura, FacturaEstado, Cliente } from '../../core/models';
 import { FacturaService } from '../../core/services/factura.service';
+import { ClienteService } from '../../core/services/cliente.service';
 
 @Component({
   selector: 'app-facturacao',
@@ -61,6 +62,7 @@ import { FacturaService } from '../../core/services/factura.service';
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nº da Factura</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Valor</th>
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data de Criação</th>
@@ -71,6 +73,9 @@ import { FacturaService } from '../../core/services/factura.service';
                 class="hover:bg-gray-50 transition-colors"
                 [class.bg-gray-50/50]="i % 2 !== 0">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ factura.numero }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                <span class="font-semibold">{{ factura.clientName || 'N/A' }}</span>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ factura.valor | currency:'MZN':'symbol-narrow' }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
@@ -85,7 +90,7 @@ import { FacturaService } from '../../core/services/factura.service';
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ factura.dataCriacao | date:'dd/MM/yyyy HH:mm' }}</td>
             </tr>
             <tr *ngIf="facturas().length === 0">
-              <td colspan="4" class="px-6 py-16 text-center">
+              <td colspan="5" class="px-6 py-16 text-center">
                 <svg class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -106,7 +111,7 @@ import { FacturaService } from '../../core/services/factura.service';
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"></div>
 
       <!-- Modal Content -->
-      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all"
+      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all animate-in fade-in zoom-in duration-200"
            (click)="$event.stopPropagation()">
 
         <!-- Modal Header -->
@@ -122,6 +127,19 @@ import { FacturaService } from '../../core/services/factura.service';
 
         <!-- Modal Body -->
         <div class="px-6 py-5 space-y-5">
+          <!-- Cliente Dropdown -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Seleccionar Cliente <span class="text-red-500">*</span></label>
+            <select [(ngModel)]="formClientId"
+                    class="w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow appearance-none"
+                    [class.border-red-300]="submitted() && !formClientId"
+                    [class.border-gray-300]="!(submitted() && !formClientId)">
+              <option value="">Seleccione um cliente...</option>
+              <option *ngFor="let cliente of clientes()" [value]="cliente.id">{{ cliente.nome }}</option>
+            </select>
+            <p *ngIf="submitted() && !formClientId" class="mt-1 text-xs text-red-500">Deve seleccionar um cliente.</p>
+          </div>
+
           <!-- Nº de Factura -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Nº de Factura <span class="text-red-500">*</span></label>
@@ -159,18 +177,6 @@ import { FacturaService } from '../../core/services/factura.service';
             </select>
           </div>
 
-          <!-- Calculated Totals -->
-          <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
-            <div class="bg-emerald-50 rounded-lg p-3.5">
-              <div class="text-xs font-medium text-emerald-600 uppercase tracking-wider mb-1">Total Pagas</div>
-              <div class="text-lg font-bold text-emerald-700">{{ totalPagas() | currency:'MZN':'symbol-narrow' }}</div>
-            </div>
-            <div class="bg-rose-50 rounded-lg p-3.5">
-              <div class="text-xs font-medium text-rose-600 uppercase tracking-wider mb-1">Total Dívidas</div>
-              <div class="text-lg font-bold text-rose-700">{{ totalDividas() | currency:'MZN':'symbol-narrow' }}</div>
-            </div>
-          </div>
-
           <!-- Save Error -->
           <div *ngIf="saveError()" class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
             <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,10 +208,12 @@ import { FacturaService } from '../../core/services/factura.service';
 })
 export class FacturacaoComponent implements OnInit {
   private facturaService = inject(FacturaService);
+  private clienteService = inject(ClienteService);
 
   estados = FacturaEstado;
 
   facturas = signal<Factura[]>([]);
+  clientes = signal<Cliente[]>([]);
   showModal = signal(false);
   submitted = signal(false);
   isLoading = signal(true);
@@ -215,6 +223,7 @@ export class FacturacaoComponent implements OnInit {
   formNumero = '';
   formValor: number | null = null;
   formEstado: FacturaEstado = FacturaEstado.PENDENTE;
+  formClientId = '';
 
   totalPagas = computed(() =>
     this.facturas()
@@ -236,11 +245,17 @@ export class FacturacaoComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.isLoading.set(true);
-    await this.facturaService.loadFacturas();
-    this.facturaService.facturas$.subscribe(facturas => {
-      this.facturas.set(facturas);
-    });
-    this.isLoading.set(false);
+    try {
+      await this.facturaService.loadFacturas();
+      this.clientes.set(await this.clienteService.getClientes());
+      this.facturaService.facturas$.subscribe(facturas => {
+        this.facturas.set(facturas);
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   openModal(): void {
@@ -249,6 +264,7 @@ export class FacturacaoComponent implements OnInit {
     this.formNumero = '';
     this.formValor = null;
     this.formEstado = FacturaEstado.PENDENTE;
+    this.formClientId = '';
     this.showModal.set(true);
   }
 
@@ -262,7 +278,7 @@ export class FacturacaoComponent implements OnInit {
     this.submitted.set(true);
     this.saveError.set('');
 
-    if (!this.formNumero || !this.formValor || this.formValor <= 0) {
+    if (!this.formNumero || !this.formValor || this.formValor <= 0 || !this.formClientId) {
       return;
     }
 
@@ -271,16 +287,20 @@ export class FacturacaoComponent implements OnInit {
     const { error } = await this.facturaService.addFactura({
       numero: this.formNumero,
       valor: this.formValor,
-      estado: this.formEstado
+      estado: this.formEstado,
+      clientId: this.formClientId
     });
 
-    this.isSaving.set(false);
+    this.isSaving.set(true);
 
     if (error) {
       this.saveError.set('Erro ao salvar a factura. Tente novamente.');
+      this.isSaving.set(false);
       return;
     }
 
+    this.isSaving.set(false);
     this.closeModal();
   }
 }
+

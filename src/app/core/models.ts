@@ -84,6 +84,8 @@ export interface Factura {
   valor: number;
   estado: FacturaEstado;
   dataCriacao: Date;
+  clientId?: string;
+  clientName?: string;
 }
 
 export interface Cliente {
