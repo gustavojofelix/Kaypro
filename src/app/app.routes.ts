@@ -23,7 +23,13 @@ export const routes: Routes = [
         path: 'requisitions/new',
         loadComponent: () => import('./features/requisitions/requisition-form/requisition-form.component').then(m => m.RequisitionFormComponent),
         canActivate: [roleGuard],
-        data: { roles: [Role.SOLICITANTE_OBRAS] }
+        data: { roles: [Role.SOLICITANTE_OBRAS, Role.ADMINISTRACAO] }
+      },
+      {
+        path: 'viaturas',
+        loadComponent: () => import('./features/viaturas/viaturas-list.component').then(m => m.ViaturaListComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.SOLICITANTE_OBRAS, Role.ADMINISTRACAO] }
       },
       {
         path: 'approvals/admin',
@@ -54,6 +60,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/clientes/clientes-list.component').then(m => m.ClientesListComponent),
         canActivate: [roleGuard],
         data: { roles: [Role.ADMINISTRACAO, Role.PCA] }
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.PCA] }
       }
     ]
   },

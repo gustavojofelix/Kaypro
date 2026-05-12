@@ -4,18 +4,29 @@ export enum Role {
   PCA = 'PCA'
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  created_at?: Date;
+}
+
 export interface User {
   id: string;
   email: string;
   name: string;
   role: Role;
+  companyId?: string;
+  companyName?: string;
 }
 
-export interface Vehicle {
+export interface Viatura {
   id: string;
-  plate: string;
-  model: string;
-  lastKm: number;
+  marca: string;
+  matricula: string;
+  user_id: string;
+  ativa: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export enum RequisitionStatus {
@@ -73,7 +84,10 @@ export interface Factura {
   valor: number;
   estado: FacturaEstado;
   dataCriacao: Date;
+  clientId?: string;
+  clientName?: string;
 }
+
 export interface Cliente {
   id: string;
   nome: string;

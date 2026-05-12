@@ -98,7 +98,7 @@ import { Requisition, RequisitionType } from '../../../core/models';
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div class="border rounded-lg p-4 text-center bg-blue-50/30">
-                <p class="text-xs text-gray-500 uppercase mb-1">Viatura (ID)</p>
+                <p class="text-xs text-gray-500 uppercase mb-1">Marca da Viatura</p>
                 <p class="text-lg font-bold text-gray-900">{{ requisition.vehicleId }}</p>
               </div>
               <div class="border rounded-lg p-4 text-center bg-blue-50/30">
