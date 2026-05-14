@@ -74,4 +74,23 @@ export class FacturaService {
   getFacturas(): Factura[] {
     return this.facturasSubject.value;
   }
+
+  async getFacturasByCliente(clientId: string): Promise<Factura[]> {
+    const { data, error } = await this.supabaseService.client
+      .from('facturas')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('data_criacao', { ascending: false });
+
+    if (error) throw error;
+
+    return (data as any[]).map((row: any) => ({
+      id: row['id'],
+      numero: row['numero'],
+      valor: Number(row['valor']),
+      estado: row['estado'] as FacturaEstado,
+      dataCriacao: new Date(row['data_criacao']),
+      clientId: row['client_id']
+    }));
+  }
 }

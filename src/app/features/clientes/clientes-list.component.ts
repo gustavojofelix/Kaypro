@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService } from '../../core/services/cliente.service';
+import { FacturaService } from '../../core/services/factura.service';
 import { Cliente } from '../../core/models';
 
 @Component({
@@ -45,7 +46,9 @@ import { Cliente } from '../../core/models';
             <tbody class="bg-white divide-y divide-gray-100">
               <tr *ngFor="let cliente of clientes()" class="hover:bg-gray-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-bold text-gray-900">{{ cliente.nome }}</div>
+                  <div class="text-sm font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" (click)="viewDetails(cliente)">
+                    {{ cliente.nome }}
+                  </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ cliente.entidade }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">{{ cliente.nuit }}</td>
@@ -134,48 +137,108 @@ import { Cliente } from '../../core/models';
     </div>
 
     <!-- Modal Detalhes -->
-    <div *ngIf="selectedCliente()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all animate-in fade-in zoom-in duration-200">
-        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-blue-600 rounded-t-2xl">
-          <h3 class="text-lg font-bold text-white">Detalhes do Cliente</h3>
-          <button (click)="selectedCliente.set(null)" class="text-blue-100 hover:text-white transition-colors">
+    <div *ngIf="selectedCliente()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all animate-in fade-in zoom-in duration-300 flex flex-col max-h-[90vh]">
+        
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-700">
+          <div>
+            <h3 class="text-xl font-bold text-white">Ficha do Cliente</h3>
+            <p class="text-blue-100 text-xs">{{ selectedCliente()?.entidade }}</p>
+          </div>
+          <button (click)="closeDetails()" class="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
 
-        <div class="p-8 space-y-6">
-          <div class="flex items-center gap-4 pb-6 border-b border-gray-100">
-            <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 text-xl font-bold">
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 custom-scrollbar">
+          <!-- Main Info -->
+          <div class="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
+            <div class="w-20 h-20 bg-blue-100 rounded-3xl flex items-center justify-center text-blue-600 text-2xl font-black shadow-inner">
               {{ selectedCliente()?.nome?.substring(0, 2)?.toUpperCase() }}
             </div>
-            <div>
-              <h4 class="text-2xl font-extrabold text-gray-900">{{ selectedCliente()?.nome }}</h4>
-              <p class="text-sm text-gray-500">Registado em {{ selectedCliente()?.dataCriacao | date:'dd/MM/yyyy' }}</p>
+            <div class="text-center sm:text-left">
+              <h4 class="text-2xl font-black text-gray-900 leading-tight">{{ selectedCliente()?.nome }}</h4>
+              <p class="text-sm text-gray-500 font-medium mt-1">NIF: <span class="text-gray-900 font-mono">{{ selectedCliente()?.nuit }}</span> • Desde {{ selectedCliente()?.dataCriacao | date:'dd/MM/yyyy' }}</p>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-x-8 gap-y-6">
-            <div class="space-y-1">
-              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Entidade</p>
-              <p class="text-sm font-bold text-gray-900">{{ selectedCliente()?.entidade }}</p>
+          <!-- Extra Info Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Entidade Fiscal</p>
+              <p class="text-sm font-bold text-gray-800">{{ selectedCliente()?.entidade }}</p>
             </div>
-            <div class="space-y-1">
-              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">NUIT</p>
-              <p class="text-sm font-bold text-gray-900 font-mono">{{ selectedCliente()?.nuit }}</p>
-            </div>
-            <div class="space-y-1 col-span-2">
-              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Endereço</p>
-              <p class="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">{{ selectedCliente()?.endereco }}</p>
+            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Endereço Registado</p>
+              <p class="text-sm font-bold text-gray-800 leading-relaxed">{{ selectedCliente()?.endereco }}</p>
             </div>
           </div>
 
-          <div class="pt-4">
-            <button (click)="selectedCliente.set(null)" class="w-full px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors">
-              Fechar
-            </button>
-          </div>
+          <!-- Facturas Section -->
+          <section class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-black text-gray-900 uppercase tracking-widest">Histórico de Facturação</h4>
+              <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-black rounded-lg uppercase">
+                {{ clientFacturas().length }} Documentos
+              </span>
+            </div>
+
+            <!-- Loading Facturas -->
+            <div *ngIf="loadingFacturas()" class="flex flex-col items-center py-10 space-y-3">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p class="text-xs text-gray-400 font-medium">A carregar extracto...</p>
+            </div>
+
+            <!-- Facturas List -->
+            <div *ngIf="!loadingFacturas() && clientFacturas().length > 0" class="space-y-3">
+              <div *ngFor="let fact of clientFacturas()" 
+                   class="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-md transition-all cursor-default">
+                <div class="flex items-center gap-4">
+                  <div class="p-2.5 bg-gray-50 rounded-xl group-hover:bg-blue-50 transition-colors">
+                    <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="text-sm font-bold text-gray-900">{{ fact.numero }}</div>
+                    <div class="text-[10px] text-gray-400 font-medium">{{ fact.dataCriacao | date:'dd/MM/yyyy HH:mm' }}</div>
+                  </div>
+                </div>
+                
+                <div class="text-right flex flex-col items-end gap-1.5">
+                  <div class="text-sm font-black text-gray-900">{{ fact.valor | currency:'MZN':'symbol-narrow' }}</div>
+                  <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md"
+                        [ngClass]="{
+                          'bg-yellow-100 text-yellow-700': fact.estado === 'Pendente',
+                          'bg-emerald-100 text-emerald-700': fact.estado === 'Paga',
+                          'bg-rose-100 text-rose-700': fact.estado === 'Cancelada'
+                        }">
+                    {{ fact.estado }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Facturas -->
+            <div *ngIf="!loadingFacturas() && clientFacturas().length === 0" class="py-12 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
+              <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-sm font-bold text-gray-400">Sem histórico financeiro</p>
+              <p class="text-[10px] text-gray-300 mt-1">Este cliente ainda não possui facturas emitidas.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+          <button (click)="closeDetails()" class="px-8 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-100 active:scale-95 transition-all shadow-sm">
+            Fechar
+          </button>
         </div>
       </div>
     </div>
@@ -183,9 +246,12 @@ import { Cliente } from '../../core/models';
 })
 export class ClientesListComponent implements OnInit {
   private clienteService = inject(ClienteService);
+  private facturaService = inject(FacturaService);
 
   clientes = signal<Cliente[]>([]);
+  clientFacturas = signal<any[]>([]);
   loading = signal(true);
+  loadingFacturas = signal(false);
   isModalOpen = signal(false);
   isEditing = signal(false);
   submitting = signal(false);
@@ -228,8 +294,23 @@ export class ClientesListComponent implements OnInit {
     this.error.set(null);
   }
 
-  viewDetails(cliente: Cliente) {
+  async viewDetails(cliente: Cliente) {
     this.selectedCliente.set(cliente);
+    this.loadingFacturas.set(true);
+    try {
+      const facturas = await this.facturaService.getFacturasByCliente(cliente.id);
+      this.clientFacturas.set(facturas);
+    } catch (e) {
+      console.error('Erro ao carregar facturas do cliente:', e);
+      this.clientFacturas.set([]);
+    } finally {
+      this.loadingFacturas.set(false);
+    }
+  }
+
+  closeDetails() {
+    this.selectedCliente.set(null);
+    this.clientFacturas.set([]);
   }
 
   async deleteCliente(cliente: Cliente) {
@@ -271,4 +352,3 @@ export class ClientesListComponent implements OnInit {
     }
   }
 }
-
