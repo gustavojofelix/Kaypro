@@ -86,6 +86,9 @@ export interface Factura {
   dataCriacao: Date;
   clientId?: string;
   clientName?: string;
+  clientEntidade?: string;
+  clientNuit?: string;
+  clientEndereco?: string;
 }
 
 export interface Cliente {

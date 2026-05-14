@@ -14,7 +14,7 @@ export class FacturaService {
   async loadFacturas(): Promise<void> {
     const { data, error } = await this.supabaseService.client
       .from('facturas')
-      .select('*, clientes(nome)')
+      .select('*, clientes(*)')
       .order('data_criacao', { ascending: false });
 
     if (data && !error) {
@@ -25,7 +25,10 @@ export class FacturaService {
         estado: row['estado'] as FacturaEstado,
         dataCriacao: new Date(row['data_criacao']),
         clientId: row['client_id'],
-        clientName: row['clientes']?.nome
+        clientName: row['clientes']?.nome,
+        clientEntidade: row['clientes']?.entidade,
+        clientNuit: row['clientes']?.nuit,
+        clientEndereco: row['clientes']?.endereco
       }));
       this.facturasSubject.next(facturas);
     }
@@ -40,7 +43,7 @@ export class FacturaService {
         estado: factura.estado,
         client_id: factura.clientId
       })
-      .select('*, clientes(nome)')
+      .select('*, clientes(*)')
       .single();
 
     if (error) {
@@ -56,7 +59,10 @@ export class FacturaService {
         estado: row['estado'] as FacturaEstado,
         dataCriacao: new Date(row['data_criacao']),
         clientId: row['client_id'],
-        clientName: row['clientes']?.nome
+        clientName: row['clientes']?.nome,
+        clientEntidade: row['clientes']?.entidade,
+        clientNuit: row['clientes']?.nuit,
+        clientEndereco: row['clientes']?.endereco
       };
       const current = this.facturasSubject.value;
       this.facturasSubject.next([novaFactura, ...current]);

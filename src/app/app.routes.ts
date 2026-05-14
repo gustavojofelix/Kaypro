@@ -53,7 +53,7 @@ export const routes: Routes = [
         path: 'facturacao',
         loadComponent: () => import('./features/facturacao/facturacao.component').then(m => m.FacturacaoComponent),
         canActivate: [roleGuard],
-        data: { roles: [Role.PCA] }
+        data: { roles: [Role.ADMINISTRACAO, Role.PCA] }
       },
       {
         path: 'clientes',
