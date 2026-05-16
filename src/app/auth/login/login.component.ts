@@ -58,11 +58,23 @@ import { Role } from '../../core/models';
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  [type]="showPassword ? 'text' : 'password'"
                   [(ngModel)]="password"
                   required
                   placeholder="••••••••"
-                  class="appearance-none block w-full pl-10 pr-3 py-2.5 border border-gray-600 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow" />
+                  class="appearance-none block w-full pl-10 pr-10 py-2.5 border border-gray-600 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow" />
+                <button
+                  type="button"
+                  (click)="showPassword = !showPassword"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200 focus:outline-none">
+                  <svg *ngIf="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                  <svg *ngIf="showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m5.813-1.423A3 3 0 1112.458 12m1.538 1.538l4.036 4.036M21 21l-4.036-4.036M21 21L12 12m9-9l-9 9m0 0L3 3"></path>
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -106,6 +118,7 @@ export class LoginComponent {
   password = '';
   errorMessage = '';
   isLoading = false;
+  showPassword = false;
 
   async onLogin() {
     this.errorMessage = '';

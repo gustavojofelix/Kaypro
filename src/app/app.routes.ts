@@ -66,6 +66,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
         canActivate: [roleGuard],
         data: { roles: [Role.PCA] }
+      },
+      {
+        path: 'perfil',
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.SOLICITANTE_OBRAS, Role.ADMINISTRACAO, Role.PCA] }
       }
     ]
   },

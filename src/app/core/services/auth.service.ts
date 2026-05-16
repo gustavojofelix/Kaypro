@@ -84,6 +84,40 @@ export class AuthService {
     return user ? user.role === role : false;
   }
 
+  async updateProfile(updates: { name: string }): Promise<void> {
+    const user = this.currentUserValue;
+    if (!user) return;
+
+    const { error } = await this.supabaseService.client
+      .from('profiles')
+      .update({ name: updates.name })
+      .eq('id', user.id);
+
+    if (error) throw error;
+
+    // Update local state
+    this.currentUserSubject.next({ ...user, name: updates.name });
+  }
+
+  async updatePassword(newPassword: string): Promise<void> {
+    const { error } = await this.supabaseService.client.auth.updateUser({
+      password: newPassword
+    });
+    if (error) throw error;
+  }
+
+  async reauthenticate(password: string): Promise<{ error: string | null }> {
+    const user = this.currentUserValue;
+    if (!user) return { error: 'Utilizador não encontrado.' };
+    
+    const { error } = await this.supabaseService.client.auth.signInWithPassword({
+      email: user.email,
+      password
+    });
+
+    return { error: error ? 'Senha actual incorrecta.' : null };
+  }
+
   async waitForInit(): Promise<void> {
     if (this.initialized) return;
     // Poll until initialized (max 5 seconds)
