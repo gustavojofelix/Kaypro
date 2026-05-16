@@ -68,6 +68,12 @@ export const routes: Routes = [
         data: { roles: [Role.PCA] }
       },
       {
+        path: 'faltas',
+        loadComponent: () => import('./features/faltas/faltas-list.component').then(m => m.FaltasListComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.SOLICITANTE_OBRAS, Role.ADMINISTRACAO, Role.PCA] }
+      },
+      {
         path: 'perfil',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         canActivate: [roleGuard],

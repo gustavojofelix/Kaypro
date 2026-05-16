@@ -99,3 +99,21 @@ export interface Cliente {
   endereco: string;
   dataCriacao: Date;
 }
+
+export enum FaltaStatus {
+  PENDENTE = 'Pendente',
+  APROVADO = 'Aprovado',
+  REJEITADO = 'Rejeitado'
+}
+
+export interface Falta {
+  id: string;
+  requesterId: string;
+  requesterName?: string;
+  startDate: Date;
+  endDate: Date;
+  reason: string;
+  status: FaltaStatus;
+  rejectionReason?: string;
+  createdAt: Date;
+}
