@@ -25,6 +25,7 @@ import { RequisitionType, RequisitionStatus, Requisition, Viatura } from '../../
             <select formControlName="type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
               <option value="MATERIAL">Material de Construção</option>
               <option value="COMBUSTIVEL">Combustível</option>
+              <option value="OUTROS">Outros</option>
             </select>
           </div>
         </div>
@@ -64,18 +65,18 @@ import { RequisitionType, RequisitionStatus, Requisition, Viatura } from '../../
           </div>
         </div>
 
-        <!-- Material Fields -->
-        <div *ngIf="form.get('type')?.value === 'MATERIAL'" class="bg-gray-50 p-3 sm:p-4 rounded-md mb-6 border border-gray-200">
-           <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-4">Itens de Material</h3>
+        <!-- Material / Outros Fields -->
+        <div *ngIf="form.get('type')?.value === 'MATERIAL' || form.get('type')?.value === 'OUTROS'" class="bg-gray-50 p-3 sm:p-4 rounded-md mb-6 border border-gray-200">
+           <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-4">Itens da Requisição</h3>
            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">Obra de Destino</label>
+              <label class="block text-sm font-medium text-gray-700">Obra / Local de Destino</label>
               <input type="text" formControlName="destinationWork" class="mt-1 border border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm rounded-md">
            </div>
            
            <div formArrayName="items">
              <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-200 sm:border-b-0 sm:pb-0">
                <div class="flex-1">
-                 <label class="block text-xs font-medium text-gray-700">Material</label>
+                 <label class="block text-xs font-medium text-gray-700">Descrição / Item</label>
                  <input type="text" formControlName="material" class="mt-1 border border-gray-300 py-2 px-3 block w-full shadow-sm sm:text-sm rounded-md">
                </div>
                <div class="grid grid-cols-3 gap-3 sm:contents">
@@ -169,7 +170,7 @@ export class RequisitionFormComponent implements OnInit {
     }
     
     this.form.get('type')?.valueChanges.subscribe(type => {
-      if (type === 'MATERIAL') {
+      if (type === 'MATERIAL' || type === 'OUTROS') {
         this.form.get('destinationWork')?.enable();
         this.form.get('items')?.enable();
         this.form.get('vehicleId')?.disable();
@@ -246,7 +247,7 @@ export class RequisitionFormComponent implements OnInit {
     const type = this.form.get('type')?.value;
     let totalValue = 0;
     
-    if (type === 'MATERIAL') {
+    if (type === 'MATERIAL' || type === 'OUTROS') {
       totalValue = this.calculateMaterialTotal();
     } else {
       totalValue = (this.form.get('liters')?.value || 0) * 85; 
@@ -260,7 +261,7 @@ export class RequisitionFormComponent implements OnInit {
         status: user.role === 'ADMINISTRACAO' ? RequisitionStatus.PENDENTE_PCA : RequisitionStatus.PENDENTE_ADMIN,
         totalValue: totalValue,
         destinationWork: this.form.get('destinationWork')?.value,
-        items: type === 'MATERIAL' ? this.items.value.map((it: any) => ({
+        items: (type === 'MATERIAL' || type === 'OUTROS') ? this.items.value.map((it: any) => ({
           ...it,
           total: it.quantity * it.unitCost
         })) : undefined,

@@ -65,8 +65,8 @@ export class RequisitionService {
 
     if (reqError) throw reqError;
 
-    // 2. Se for MATERIAL, inserir os itens
-    if (req.type === RequisitionType.MATERIAL && req.items && req.items.length > 0) {
+    // 2. Se for MATERIAL ou OUTROS, inserir os itens
+    if ((req.type === RequisitionType.MATERIAL || req.type === RequisitionType.OUTROS) && req.items && req.items.length > 0) {
       const itemsToInsert = req.items.map(item => ({
         requisition_id: reqData.id,
         material: item.material,
@@ -137,7 +137,7 @@ export class RequisitionService {
     return this.requisitions$.pipe(
       map(reqs => {
         const spends: Record<string, number> = {};
-        reqs.filter(r => r.type === RequisitionType.MATERIAL && r.status === RequisitionStatus.APROVADO && r.destinationWork)
+        reqs.filter(r => (r.type === RequisitionType.MATERIAL || r.type === RequisitionType.OUTROS) && r.status === RequisitionStatus.APROVADO && r.destinationWork)
             .forEach(r => {
               const work = r.destinationWork!;
               spends[work] = (spends[work] || 0) + r.totalValue;

@@ -60,17 +60,17 @@ import { Requisition, RequisitionType } from '../../../core/models';
             <p class="text-sm text-red-700 italic">"{{ requisition.rejectionReason }}"</p>
           </div>
 
-          <!-- Specific Content: MATERIAL -->
-          <div *ngIf="requisition.type === reqType.MATERIAL" class="space-y-4">
+          <!-- Specific Content: MATERIAL / OUTROS -->
+          <div *ngIf="requisition.type === reqType.MATERIAL || requisition.type === reqType.OUTROS" class="space-y-4">
             <div class="flex items-center gap-2 text-gray-800 font-bold border-b pb-2">
               <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-              Itens da Requisição (Obra: {{ requisition.destinationWork }})
+              Itens da Requisição (Destino: {{ requisition.destinationWork }})
             </div>
             <div class="overflow-hidden border rounded-lg">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50 text-xs font-medium text-gray-500 uppercase">
                   <tr>
-                    <th class="px-4 py-2 text-left">Material</th>
+                    <th class="px-4 py-2 text-left">Item / Descrição</th>
                     <th class="px-4 py-2 text-center">Unid.</th>
                     <th class="px-4 py-2 text-center">Qtd.</th>
                     <th class="px-4 py-2 text-right">Preço Un.</th>

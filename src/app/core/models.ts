@@ -39,7 +39,8 @@ export enum RequisitionStatus {
 
 export enum RequisitionType {
   MATERIAL = 'MATERIAL',
-  COMBUSTIVEL = 'COMBUSTIVEL'
+  COMBUSTIVEL = 'COMBUSTIVEL',
+  OUTROS = 'OUTROS'
 }
 
 export interface MaterialItem {
