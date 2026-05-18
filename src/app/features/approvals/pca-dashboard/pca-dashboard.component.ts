@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { map } from 'rxjs/operators';
 import { RequisitionService } from '../../../core/services/requisition.service';
-import { AbsenceService } from '../../../core/services/absence.service';
-import { RequisitionStatus, Requisition, FaltaStatus } from '../../../core/models';
+import { RequisitionStatus, Requisition } from '../../../core/models';
 import { RequisitionDetailModalComponent } from '../../requisitions/requisition-detail-modal/requisition-detail-modal.component';
 
 @Component({
@@ -37,15 +36,6 @@ import { RequisitionDetailModalComponent } from '../../requisitions/requisition-
               Pendentes
               <span class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded-md text-[10px]" *ngIf="(pendingReqs$ | async)?.length">
                 {{ (pendingReqs$ | async)?.length }}
-              </span>
-            </button>
-            <button (click)="activeTab.set('faltas')"
-                    [class.tab-active]="activeTab() === 'faltas'"
-                    class="flex-1 lg:px-8 py-3 text-sm font-black rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
-              <span class="w-2 h-2 rounded-full" [class.bg-purple-500]="activeTab() === 'faltas'" [class.bg-gray-400]="activeTab() !== 'faltas'"></span>
-              Avisos Falta
-              <span class="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-md text-[10px]" *ngIf="(pendingAbsences$ | async)?.length">
-                {{ (pendingAbsences$ | async)?.length }}
               </span>
             </button>
             <button (click)="activeTab.set('history')"
@@ -179,61 +169,6 @@ import { RequisitionDetailModalComponent } from '../../requisitions/requisition-
             </table>
           </div>
 
-          <!-- Faltas View -->
-          <div *ngIf="activeTab() === 'faltas'" class="p-8">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="w-2 h-8 bg-purple-600 rounded-full"></div>
-              <h3 class="text-xl font-black text-gray-900">Avisos de Falta para Aprovação</h3>
-            </div>
-            
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead>
-                <tr>
-                  <th class="table-header">Solicitante</th>
-                  <th class="table-header">Período</th>
-                  <th class="table-header">Motivo</th>
-                  <th class="table-header text-right">Acções</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-50">
-                <tr *ngFor="let falta of pendingAbsences$ | async" class="table-row">
-                  <td class="px-6 py-5">
-                    <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-[10px] font-black text-purple-600 border border-purple-100">
-                        {{falta.requesterName?.substring(0, 2)?.toUpperCase()}}
-                      </div>
-                      <span class="text-sm font-bold text-gray-700">{{falta.requesterName}}</span>
-                    </div>
-                  </td>
-                  <td class="px-6 py-5">
-                    <div class="text-sm font-black text-gray-900 tracking-tight">
-                      {{falta.startDate | date:'dd/MM/yyyy'}} a {{falta.endDate | date:'dd/MM/yyyy'}}
-                    </div>
-                  </td>
-                  <td class="px-6 py-5">
-                    <div class="text-sm text-gray-600 line-clamp-2 max-w-xs">{{falta.reason}}</div>
-                  </td>
-                  <td class="px-6 py-5 text-right space-x-2">
-                    <button (click)="approveAbsence(falta.id)" class="btn-action btn-success">Aprovar</button>
-                    <button (click)="rejectAbsence(falta.id)" class="btn-action btn-danger">Rejeitar</button>
-                  </td>
-                </tr>
-                <tr *ngIf="(pendingAbsences$ | async)?.length === 0">
-                  <td colspan="4" class="py-24 text-center">
-                    <div class="flex flex-col items-center">
-                      <div class="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      </div>
-                      <h4 class="text-lg font-black text-gray-900">Nenhum aviso pendente</h4>
-                      <p class="text-sm text-gray-500">Todos os avisos de falta foram processados.</p>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- History View -->
           <div *ngIf="activeTab() === 'history'" class="p-8">
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center gap-3">
@@ -293,6 +228,7 @@ import { RequisitionDetailModalComponent } from '../../requisitions/requisition-
               </tbody>
             </table>
           </div>
+
         </div>
       </main>
     </div>
@@ -323,28 +259,22 @@ import { RequisitionDetailModalComponent } from '../../requisitions/requisition-
 })
 export class PcaDashboardComponent implements OnInit {
   private reqService = inject(RequisitionService);
-  private absenceService = inject(AbsenceService);
   
   RequisitionStatus = RequisitionStatus;
-  activeTab = signal<'pending' | 'history' | 'faltas'>('pending');
+  activeTab = signal<'pending' | 'history'>('pending');
   searchTerm = '';
   statusFilter = 'ALL';
   selectedRequisition = signal<Requisition | null>(null);
 
   async ngOnInit() {
-    await Promise.all([
-      this.reqService.loadRequisitions(),
-      this.absenceService.loadAbsences()
-    ]);
+    await this.reqService.loadRequisitions();
   }
 
   pendingReqs$ = this.reqService.requisitions$.pipe(
     map(reqs => reqs.filter(r => r.status === RequisitionStatus.PENDENTE_PCA))
   );
 
-  pendingAbsences$ = this.absenceService.absences$.pipe(
-    map(abs => abs.filter(a => a.status === FaltaStatus.PENDENTE))
-  );
+
 
   filteredHistory$ = this.reqService.requisitions$.pipe(
     map(reqs => {
@@ -389,16 +319,5 @@ export class PcaDashboardComponent implements OnInit {
     }
   }
 
-  async approveAbsence(id: string) {
-    if (confirm('Aprovar este aviso de falta?')) {
-      await this.absenceService.updateStatus(id, FaltaStatus.APROVADO);
-    }
-  }
 
-  async rejectAbsence(id: string) {
-    const reason = prompt('Motivo da rejeição:');
-    if (reason) {
-      await this.absenceService.updateStatus(id, FaltaStatus.REJEITADO, reason);
-    }
-  }
 }
