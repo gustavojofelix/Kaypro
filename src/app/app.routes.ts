@@ -80,6 +80,12 @@ export const routes: Routes = [
         data: { roles: [Role.PCA] }
       },
       {
+        path: 'faltas-calendario',
+        loadComponent: () => import('./features/faltas/faltas-calendario/faltas-calendario.component').then(m => m.FaltasCalendarioComponent),
+        canActivate: [roleGuard],
+        data: { roles: [Role.SOLICITANTE_OBRAS, Role.ADMINISTRACAO, Role.PCA] }
+      },
+      {
         path: 'perfil',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         canActivate: [roleGuard],
